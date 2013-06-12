@@ -80,8 +80,7 @@ class Spazm():
 			'''
 			
 if __name__ == '__main__':
-	ACCESS_TOKEN = "2abycrsbnonndh31nkxfuq96yh8flqg"
-	s = Spazm(ACCESS_TOKEN)
+	s = Spazm()
 	while True:
 		print "=== Options ==="
 		print "1) Following streams"
