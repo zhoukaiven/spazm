@@ -21,6 +21,12 @@ class Spazm():
 		except UnicodeEncodeError: # obj is unicode
 			print unicode(phrase).encode('unicode_escape')
 	
+	def to_str(self, obj):
+		try:
+			return str(phrase)
+		except UnicodeEncodeError: # obj is unicode
+			return unicode(phrase).encode('unicode_escape')
+			
 	def run(self, cmd):
 		startupinfo = None
 		if os.name == 'nt':
@@ -47,8 +53,9 @@ class Spazm():
 			
 		while True:
 			print "\n\n"
-			print "=== Streams Followed ==="
 			
+			#Display streams followed that are live
+			print "=== Streams Followed ==="
 			for i in range(0, len(streams)):
 				stream = streams[i]
 				self.safe_print("%s) %s [%s]" % (i, stream['streamer'], stream['game']))
@@ -59,17 +66,24 @@ class Spazm():
 			input = raw_input()
 			print
 			
+			#Display qualities for the stream chosen
 			url = streams[int(input)]['url']
 			
 			plugin = livestreamer.resolve_url(url)
 			qualities = plugin.get_streams().keys()
-			if not qualities:
-				qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE) #still opens new cmd prompt
+			if not qualities: #IDK why, sometimes livestreamer API doesnt work, so I manually run livestreamer
+				qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE) #possibly opens new cmd prompt
 			self.safe_print("Qualities: %s" %qualities)
 			
 			print "\nChoose: ",
 			input = raw_input()
-			self.run("livestreamer %s %s" % (url, input))
+			
+			#Start VLC and connect to stream
+			self.run("livestreamer %s %s" % (url, input)) #does not wait to complete
+			
+			'''
+			#Allow quality change
+			'''
 			
 if __name__ == '__main__':
 	ACCESS_TOKEN = "2abycrsbnonndh31nkxfuq96yh8flqg"
