@@ -50,8 +50,8 @@ class Spazm():
 			
 			#Display streams followed that are live
 			print "=== Streams Followed ==="
-			for i in range(0, len(streams)):
-				stream = streams[i]
+			
+			for i, stream in enumerate(streams):
 				print "%s) %s [%s]" % (i, stream['streamer'], stream['game'])
 				print stream['status']
 				print
@@ -83,9 +83,13 @@ if __name__ == '__main__':
 	s = Spazm()
 	while True:
 		print "=== Options ==="
-		print "1) Following streams"
+		options = ["Streams Following"]
+		
+		for i, option in enumerate(options):
+			print "%s) %s" % (i, option)
+			
 		print "Choose: ",
 		input = raw_input()
 		
-		if input == '1':
+		if input == '0':
 			s.watch_streams_followed()
