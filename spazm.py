@@ -29,13 +29,11 @@ class Spazm():
 		stdout = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
 		return stdout
 	
-	def watch_streams_followed(self):
-		livestreamer = Livestreamer()
-		
+	def get_streams_followed(self):
 		streams = []
 		streams_followed = self.twitch.getstreamsfollowing()["streams"]
-		for i in range(0, len(streams_followed)):
-				channel = streams_followed[i]['channel']
+		for i, channel_data in enumerate(streams_followed):
+				channel = channel_data['channel']
 				
 				stream = {}
 				stream['streamer'] = self.to_str(channel['display_name'])
@@ -44,7 +42,13 @@ class Spazm():
 				stream['url'] = self.to_str(channel['url'])
 
 				streams.append(stream)
-			
+
+		return streams
+		
+	def watch_streams_followed(self):
+		livestreamer = Livestreamer()
+		
+		streams = self.get_streams_followed()
 		while True:
 			print "\n\n"
 			
