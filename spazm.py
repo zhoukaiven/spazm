@@ -52,6 +52,10 @@ class Spazm():
 		if not qualities: #IDK why, sometimes livestreamer API doesnt work, so I manually run livestreamer
 			qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
 		return self.to_str(qualities)
+	
+	def start_video(self, url, quality = "worst"):
+		vid_status = None
+		vid = self.run("livestreamer %s %s" % (url, quality)) #does not wait to complete
 		
 	def watch_streams_followed(self):
 		streams = self.get_streams_followed()
@@ -78,12 +82,8 @@ class Spazm():
 			input = raw_input()
 			
 			#Start VLC and connect to stream
-			vid = self.run("livestreamer %s %s" % (url, input)) #does not wait to complete
+			self.start_video(url, input)
 			
-			'''
-			#Allow quality change
-			'''
-		
 if __name__ == '__main__':
 	s = Spazm()
 	while True:
