@@ -26,8 +26,8 @@ class Spazm():
 		if os.name == 'nt':
 			startupinfo = subprocess.STARTUPINFO()
 			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-		stdout = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
-		return stdout
+		process = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
+		return process
 	
 	def get_streams_followed(self):
 		streams = []
@@ -45,9 +45,15 @@ class Spazm():
 
 		return streams
 		
-	def watch_streams_followed(self):
+	def get_stream_qualities(self, url):
 		livestreamer = Livestreamer()
+		plugin = livestreamer.resolve_url(url)
+		qualities = plugin.get_streams().keys()
+		if not qualities: #IDK why, sometimes livestreamer API doesnt work, so I manually run livestreamer
+			qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
+		return self.to_str(qualities)
 		
+	def watch_streams_followed(self):
 		streams = self.get_streams_followed()
 		while True:
 			print "\n\n"
@@ -66,23 +72,18 @@ class Spazm():
 			
 			#Display qualities for the stream chosen
 			url = self.to_str(streams[int(input)]['url'])
-			
-			plugin = livestreamer.resolve_url(url)
-			qualities = plugin.get_streams().keys()
-			if not qualities: #IDK why, sometimes livestreamer API doesnt work, so I manually run livestreamer
-				qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
-			print self.to_str("Qualities: %s" %qualities)
+			print "Qualities: %s" % self.get_stream_qualities(url)
 			
 			print "\nChoose: ",
 			input = raw_input()
 			
 			#Start VLC and connect to stream
-			self.run("livestreamer %s %s" % (url, input)) #does not wait to complete
+			vid = self.run("livestreamer %s %s" % (url, input)) #does not wait to complete
 			
 			'''
 			#Allow quality change
 			'''
-			
+		
 if __name__ == '__main__':
 	s = Spazm()
 	while True:
