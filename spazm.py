@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
 from livestreamer import Livestreamer
 import twitchingpython
 import subprocess
@@ -16,10 +18,13 @@ class Spazm():
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
 
 	def to_str(self, obj):
+		"""
 		try:
 			return str(obj)
 		except UnicodeEncodeError: # obj is unicode
 			return unicode(obj).encode('unicode_escape')
+		"""
+		return obj
 			
 	def run(self, cmd):
 		startupinfo = None
@@ -33,37 +38,44 @@ class Spazm():
 		streams = []
 		streams_followed = self.twitch.getstreamsfollowing()["streams"]
 		for i, channel_data in enumerate(streams_followed):
-				channel = channel_data['channel']
-				
-				stream = {}
-				stream['streamer'] = self.to_str(channel['display_name'])
-				stream['status'] = self.to_str(channel['status'])
-				stream['game'] = self.to_str(channel['game'])
-				stream['url'] = self.to_str(channel['url'])
+			channel = channel_data['channel']
+			
+			stream = {}
+			stream['streamer'] = self.to_str(channel['display_name'])
+			stream['status'] = self.to_str(channel['status'])
+			stream['game'] = self.to_str(channel['game'])
+			stream['url'] = self.to_str(channel['url'])
 
-				streams.append(stream)
+			streams.append(stream)
 
 		return streams
 		
 	def get_stream_qualities(self, url):
+		'''
+		#doesn't return all qualities
 		livestreamer = Livestreamer()
 		plugin = livestreamer.resolve_url(url)
+
 		qualities = plugin.get_streams().keys()
-		if not qualities: #IDK why, sometimes livestreamer API doesnt work, so I manually run livestreamer
-			qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
+		'''
+		#qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
+		qualities, stderr = self.run("livestreamer %s" % url).communicate()
+		
 		return self.to_str(qualities)
-	
+
 	def start_video(self, url, quality = "worst"):
 		vid_status = None
 		vid = self.run("livestreamer %s %s" % (url, quality)) #does not wait to complete
 		
 	def watch_streams_followed(self):
+	
 		streams = self.get_streams_followed()
 		while True:
 			print "\n\n"
-			
 			#Display streams followed that are live
 			print "=== Streams Followed ==="
+			print "*) Refresh"
+			print
 			
 			for i, stream in enumerate(streams):
 				print "%s) %s [%s]" % (i, stream['streamer'], stream['game'])
@@ -74,19 +86,23 @@ class Spazm():
 			input = raw_input()
 			print
 			
-			#Display qualities for the stream chosen
-			url = self.to_str(streams[int(input)]['url'])
-			print "Qualities: %s" % self.get_stream_qualities(url)
-			
-			print "\nChoose: ",
-			input = raw_input()
-			
-			#Start VLC and connect to stream
-			self.start_video(url, input)
+			if input == '*':
+				streams = self.get_streams_followed()
+			else:
+				#Display qualities for the stream chosen
+				url = streams[int(input)]['url']
+				print "Qualities: %s" % self.get_stream_qualities(url)
+				
+				print "\nChoose: ",
+				input = raw_input()
+				
+				#Start VLC and connect to stream
+				self.start_video(url, input)
 			
 if __name__ == '__main__':
 	s = Spazm()
 	while True:
+		'''
 		print "=== Options ==="
 		options = ["Streams Following"]
 		
@@ -95,6 +111,7 @@ if __name__ == '__main__':
 			
 		print "Choose: ",
 		input = raw_input()
-		
+		'''
+		input = '0'
 		if input == '0':
 			s.watch_streams_followed()
