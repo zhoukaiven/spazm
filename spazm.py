@@ -5,11 +5,16 @@ import twitchingpython
 import subprocess
 from subprocess import check_call, Popen, PIPE
 import os
+import curses
+import re
+from textwrap import wrap
 
 class Spazm():
 	ACCESS_TOKEN = None
 	twitch = None
 	BASE_URL = None
+	output = []
+	
 	def __init__(self,token=None):
 		if not token:
 			self.ACCESS_TOKEN = twitchingpython.gettoken()
@@ -17,15 +22,19 @@ class Spazm():
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
 
-	def to_str(self, obj):
-		"""
-		try:
-			return str(obj)
-		except UnicodeEncodeError: # obj is unicode
-			return unicode(obj).encode('unicode_escape')
-		"""
-		return obj
-			
+	def display(self, screen, all_text):
+		screen.clear()
+		screen.border(0)
+		line = 1
+		for text_block in all_text:	
+			if text_block == "\n":
+				line +=1
+			else:
+				for text in wrap(text_block,78):
+					screen.addstr(line, 1, text)
+					line += 1
+		screen.refresh()
+		
 	def run(self, cmd):
 		startupinfo = None
 		if os.name == 'nt':
@@ -41,10 +50,10 @@ class Spazm():
 			channel = channel_data['channel']
 			
 			stream = {}
-			stream['streamer'] = self.to_str(channel['display_name'])
-			stream['status'] = self.to_str(channel['status'])
-			stream['game'] = self.to_str(channel['game'])
-			stream['url'] = self.to_str(channel['url'])
+			stream['streamer'] = channel['display_name']
+			stream['status'] = channel['status']
+			stream['game'] = channel['game']
+			stream['url'] = channel['url']
 
 			streams.append(stream)
 
@@ -59,50 +68,64 @@ class Spazm():
 		qualities = plugin.get_streams().keys()
 		'''
 		#qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
-		qualities, stderr = self.run("livestreamer %s" % url).communicate()
-		
-		return self.to_str(qualities)
+		qualities_data, stderr = self.run("livestreamer %s" % url).communicate()
+		found_qualities = re.search("Found streams: (.*)", qualities_data)
+		if found_qualities:
+			qualities = found_qualities.group(1).replace("\n", '').replace("(worst)","").replace("(best)",'').replace("(worst, best)", '')
+			qualities = [x.strip() for x in qualities.split(',')]
+		return qualities
 
 	def start_video(self, url, quality = "worst"):
 		vid_status = None
 		vid = self.run("livestreamer %s %s" % (url, quality)) #does not wait to complete
 		
-	def watch_streams_followed(self):
-	
+	def watch_streams_followed(self, screen):
+		screen.clear()
+		screen.border(0)
+		
 		streams = self.get_streams_followed()
 		while True:
-			print "\n\n"
+			output = []
 			#Display streams followed that are live
-			print "=== Streams Followed ==="
-			print "*) Refresh"
-			print
+			output.append("=== Streams Followed ===")
+			output.append("\n")
+			output.append("*) Refresh")
+			output.append("\n")
 			
 			for i, stream in enumerate(streams):
-				print "%s) %s [%s]" % (i, stream['streamer'], stream['game'])
-				print stream['status']
-				print
+				output.append("%s) %s [%s]" % (i, stream['streamer'], stream['game']))
+				output.append(stream['status'])
+				output.append("\n")
 				
-			print "Choose: ",
-			input = raw_input()
-			print
+			#print "Choose: ",
+			self.display(screen, output)
+			input = unichr(screen.getch())
 			
+			output = ["=== Qualities ===", "\n"]
 			if input == '*':
 				streams = self.get_streams_followed()
 			else:
 				#Display qualities for the stream chosen
 				url = streams[int(input)]['url']
-				print "Qualities: %s" % self.get_stream_qualities(url)
+				qualities = self.get_stream_qualities(url)
+				for i, quality in enumerate(qualities):
+					output.append("%s) %s" % (i, quality))
 				
-				print "\nChoose: ",
-				input = raw_input()
+				self.display(screen, output)
+				input = unichr(screen.getch())
 				
 				#Start VLC and connect to stream
-				self.start_video(url, input)
-			
+				self.start_video(url, qualities[int(input)])
+				
 if __name__ == '__main__':
 	s = Spazm()
+	screen = curses.initscr()
+	curses.noecho()
 	while True:
 		'''
+		screen.clear()
+		screen.border(0)
+		
 		print "=== Options ==="
 		options = ["Streams Following"]
 		
@@ -114,4 +137,4 @@ if __name__ == '__main__':
 		'''
 		input = '0'
 		if input == '0':
-			s.watch_streams_followed()
+			s.watch_streams_followed(screen)
