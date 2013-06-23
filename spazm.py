@@ -21,7 +21,15 @@ class Spazm():
 		else:
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
-
+		
+	def run(self, cmd):
+		startupinfo = None
+		if os.name == 'nt':
+			startupinfo = subprocess.STARTUPINFO()
+			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+		process = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
+		return process
+		
 	def display(self, screen, all_text):
 		screen.clear()
 		screen.border(0)
@@ -35,14 +43,6 @@ class Spazm():
 					line += 1
 		screen.refresh()
 		
-	def run(self, cmd):
-		startupinfo = None
-		if os.name == 'nt':
-			startupinfo = subprocess.STARTUPINFO()
-			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-		process = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
-		return process
-	
 	def get_streams_followed(self):
 		streams = []
 		streams_followed = self.twitch.getstreamsfollowing()["streams"]
@@ -89,11 +89,11 @@ class Spazm():
 			#Display streams followed that are live
 			output.append("=== Streams Followed ===")
 			output.append("\n")
-			output.append("*) Refresh")
+			output.append("`) Refresh")
 			output.append("\n")
 			
 			for i, stream in enumerate(streams):
-				output.append("%s) %s [%s]" % (i, stream['streamer'], stream['game']))
+				output.append("%s) %s [%s]" % (i + 1, stream['streamer'], stream['game']))
 				output.append(stream['status'])
 				output.append("\n")
 				
@@ -101,21 +101,25 @@ class Spazm():
 			self.display(screen, output)
 			input = unichr(screen.getch())
 			
-			output = ["=== Qualities ===", "\n"]
-			if input == '*':
+			if input == '`':
+				screen.addstr(1, 66, "[REFRESHING]")
+				screen.refresh()
 				streams = self.get_streams_followed()
 			else:
-				#Display qualities for the stream chosen
-				url = streams[int(input)]['url']
+				output = ["=== Qualities ===", "\n", "`) Back", "\n"]
+				
+				screen.addstr(1, 70, "[LOADING]")
+				screen.refresh()
+				
+				url = streams[int(input) - 1]['url'] #Display qualities for the stream chosen
 				qualities = self.get_stream_qualities(url)
 				for i, quality in enumerate(qualities):
 					output.append("%s) %s" % (i, quality))
 				
 				self.display(screen, output)
 				input = unichr(screen.getch())
-				
-				#Start VLC and connect to stream
-				self.start_video(url, qualities[int(input)])
+				if input != '`':
+					self.start_video(url, qualities[int(input)]) #Start VLC and connect to stream
 				
 if __name__ == '__main__':
 	s = Spazm()
