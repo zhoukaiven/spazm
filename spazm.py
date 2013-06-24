@@ -21,7 +21,13 @@ class Spazm():
 		else:
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
-		
+	
+	def to_str(self, obj):
+		try:
+			return str(obj)
+		except UnicodeEncodeError:
+			return unicode(obj).encode('unicode_escape')
+	
 	def run(self, cmd):
 		startupinfo = None
 		if os.name == 'nt':
@@ -29,7 +35,7 @@ class Spazm():
 			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 		process = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
 		return process
-		
+	
 	def display(self, screen, all_text):
 		screen.clear()
 		screen.border(0)
@@ -50,10 +56,10 @@ class Spazm():
 			channel = channel_data['channel']
 			
 			stream = {}
-			stream['streamer'] = channel['display_name']
-			stream['status'] = channel['status']
-			stream['game'] = channel['game']
-			stream['url'] = channel['url']
+			stream['streamer'] = self.to_str(channel['display_name'])
+			stream['status'] = self.to_str(channel['status'])
+			stream['game'] = self.to_str(channel['game'])
+			stream['url'] = self.to_str(channel['url'])
 
 			streams.append(stream)
 
@@ -87,7 +93,7 @@ class Spazm():
 		while True:
 			output = []
 			#Display streams followed that are live
-			output.append("=== Streams Followed ===")
+			output.append("=== Streams Followed ===") 
 			output.append("\n")
 			output.append("`) Refresh")
 			output.append("\n")
@@ -97,7 +103,6 @@ class Spazm():
 				output.append(stream['status'])
 				output.append("\n")
 				
-			#print "Choose: ",
 			self.display(screen, output)
 			input = unichr(screen.getch())
 			
@@ -108,7 +113,7 @@ class Spazm():
 			else:
 				output = ["=== Qualities ===", "\n", "`) Back", "\n"]
 				
-				screen.addstr(1, 70, "[LOADING]")
+				screen.addstr(1, 69, "[LOADING]")
 				screen.refresh()
 				
 				url = streams[int(input) - 1]['url'] #Display qualities for the stream chosen
@@ -119,6 +124,8 @@ class Spazm():
 				self.display(screen, output)
 				input = unichr(screen.getch())
 				if input != '`':
+					screen.addstr(1, 68, "[STARTING]")	
+					screen.refresh()
 					self.start_video(url, qualities[int(input)]) #Start VLC and connect to stream
 				
 if __name__ == '__main__':
