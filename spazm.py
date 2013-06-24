@@ -45,7 +45,9 @@ class Spazm():
 				line +=1
 			else:
 				for text in wrap(text_block,78):
-					screen.addstr(line, 1, text)
+					try:
+						screen.addstr(line, 1, text)
+					except: pass
 					line += 1
 		screen.refresh()
 		
