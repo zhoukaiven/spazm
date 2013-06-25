@@ -4,8 +4,8 @@ import curses
 from textwrap import wrap
 
 class Screen(object):
-	HEIGHT = 25
-	WIDTH = 80
+	HEIGHT = 23
+	WIDTH = 78
 	
 	screen = None
 	title = None
@@ -14,6 +14,7 @@ class Screen(object):
 
 	def __init__(self):
 		self.screen = curses.initscr()
+		curses.noecho()
 		self.title = []
 		self.buffer = []
 		self.offset = 0
@@ -23,6 +24,7 @@ class Screen(object):
 	
 	def display(self):
 		self.screen.clear()
+		self.screen.border(0)
 		self.load_buffer()
 		self.screen.refresh()
 	
@@ -33,25 +35,25 @@ class Screen(object):
 			return unicode(obj).encode('unicode_escape')
 	
 	def load_buffer(self):
-		line = 0
+		line = 1 #offset for the border
 		
 		#display title
 		for text in self.title:
-			self.screen.addstr(line, 0, self.to_str(text))
+			self.screen.addstr(line, 1, self.to_str(text))
 			line += 1
 			if line == self.HEIGHT:
 				return
 		
 		#display all lines of buffer
 		for text in self.buffer[self.offset:]:
-			self.screen.addstr(line, 0, self.to_str(text))
+			self.screen.addstr(line, 1, self.to_str(text))
 			line += 1
 			if line == self.HEIGHT:
 				return
 	
 	def add(self, str = "\n"):
 		if str == "\n":
-			self.buffer.append(str)
+			self.buffer.append(" ") #Appending a new line breaks the border
 		else:
 			self.buffer.extend(wrap(str, self.WIDTH))
 			
