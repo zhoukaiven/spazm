@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
+
 from livestreamer import Livestreamer
 import twitchingpython
 import subprocess
@@ -89,7 +90,7 @@ class Spazm(Screen):
 				self.screen.addstr(1, 66, "[REFRESHING]")
 				self.screen.refresh()
 				streams = self.get_streams_followed()
-			else:
+			elif input.isdigit():
 				self.reset()
 				self.add("=== Qualities ===")
 				self.add()
@@ -106,7 +107,7 @@ class Spazm(Screen):
 				
 				self.display()
 				input = self.get_input()
-				if input != '`':
+				if input != '`' and input.isdigit():
 					self.screen.addstr(1, 68, "[STARTING]")	
 					self.screen.refresh()
 					self.start_video(url, qualities[int(input)]) #Start VLC and connect to stream
