@@ -70,7 +70,7 @@ class Screen(object):
 		elif input == curses.KEY_DOWN:
 			self.scroll_down()
 			return self.get_input()
-			
+		self.offset = 0
 		return unichr(input)
 		
 	def scroll_up(self):
