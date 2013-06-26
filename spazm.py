@@ -78,11 +78,13 @@ class Spazm(Screen):
 			self.add("`) Refresh")
 			self.add()
 			
-			for i, stream in enumerate(streams):
-				self.add("%s) %s [%s]" % (i + 1, stream['streamer'], stream['game']))
-				self.add(stream['status'])
-				self.add()
-				
+			try:
+				for i, stream in enumerate(streams):
+					self.add("%s) %s [%s]" % (hex(i + 1)[2:], stream['streamer'], stream['game']))
+					self.add(stream['status'])
+					self.add()
+			except:
+				pass
 			self.display()
 			input = self.get_input()
 			
@@ -90,7 +92,7 @@ class Spazm(Screen):
 				self.screen.addstr(1, 66, "[REFRESHING]")
 				self.screen.refresh()
 				streams = self.get_streams_followed()
-			elif input.isdigit():
+			else:
 				self.reset()
 				self.add("=== Qualities ===")
 				self.add()
@@ -100,17 +102,20 @@ class Spazm(Screen):
 				self.screen.addstr(1, 69, "[LOADING]")
 				self.screen.refresh()
 				
-				url = streams[int(input) - 1]['url'] #Display qualities for the stream chosen
-				qualities = self.get_stream_qualities(url)
-				for i, quality in enumerate(qualities):
-					self.add("%s) %s" % (i + 1, quality))
-				
-				self.display()
-				input = self.get_input()
-				if input != '`' and input.isdigit():
-					self.screen.addstr(1, 68, "[STARTING]")	
-					self.screen.refresh()
-					self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
+				try:
+					url = streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
+					qualities = self.get_stream_qualities(url)
+					for i, quality in enumerate(qualities):
+						self.add("%s) %s" % (i + 1, quality))
+					
+					self.display()
+					input = self.get_input()
+					if input != '`' and input.isdigit():
+						self.screen.addstr(1, 68, "[STARTING]")	
+						self.screen.refresh()
+						self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
+				except:
+					pass
 	
 if __name__ == '__main__':
 	s = Spazm()
