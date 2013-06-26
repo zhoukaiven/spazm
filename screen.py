@@ -7,11 +7,12 @@ class Screen(object):
 	HEIGHT = 23
 	WIDTH = 78
 	
+	'''
 	screen = None
 	title = None
 	buffer = None
 	offset = None #vertical scrolling offset
-
+	'''
 	def __init__(self):
 		self.screen = curses.initscr()
 		self.screen.keypad(1)
@@ -81,8 +82,9 @@ class Screen(object):
 		
 	def scroll_down(self):
 		self.offset += 1
-		if self.offset > len(self.buffer):
-			self.offset = len(self.buffer)
+		max_offset = max(0, len(self.buffer) - self.HEIGHT)
+		if self.offset > max_offset:
+			self.offset = max_offset
 		else:
 			self.display()
 		
