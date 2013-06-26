@@ -14,7 +14,10 @@ class Screen(object):
 
 	def __init__(self):
 		self.screen = curses.initscr()
+		self.screen.keypad(1)
+		self.screen.leaveok(1)
 		curses.noecho()
+		
 		self.title = []
 		self.buffer = []
 		self.offset = 0
@@ -58,15 +61,28 @@ class Screen(object):
 			self.buffer.extend(wrap(str, self.WIDTH))
 			
 	def get_input(self):
-		return unichr(self.screen.getch())
+		input = self.screen.getch()
+
+		if input == curses.KEY_UP:
+			self.scroll_up()
+			return self.get_input()
+		elif input == curses.KEY_DOWN:
+			self.scroll_down()
+			return self.get_input()
+			
+		return unichr(input)
 		
 	def scroll_up(self):
 		self.offset -= 1
 		if self.offset < 0:
 			self.offset = 0
+		else:
+			self.display()
 		
 	def scroll_down(self):
 		self.offset += 1
 		if self.offset > len(self.buffer):
 			self.offset = len(self.buffer)
+		else:
+			self.display()
 		
