@@ -103,14 +103,14 @@ class Spazm(Screen):
 				url = streams[int(input) - 1]['url'] #Display qualities for the stream chosen
 				qualities = self.get_stream_qualities(url)
 				for i, quality in enumerate(qualities):
-					self.add("%s) %s" % (i, quality))
+					self.add("%s) %s" % (i + 1, quality))
 				
 				self.display()
 				input = self.get_input()
 				if input != '`' and input.isdigit():
 					self.screen.addstr(1, 68, "[STARTING]")	
 					self.screen.refresh()
-					self.start_video(url, qualities[int(input)]) #Start VLC and connect to stream
+					self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
 	
 if __name__ == '__main__':
 	s = Spazm()
