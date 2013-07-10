@@ -3,11 +3,9 @@
 
 from livestreamer import Livestreamer
 import twitchingpython
-import subprocess
-from subprocess import check_call, Popen, PIPE
-import os
-import re
+
 from screen import *
+from stream import *
 
 class Spazm(Screen):
 	ACCESS_TOKEN = None
@@ -21,51 +19,13 @@ class Spazm(Screen):
 		else:
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
-
 	
-	def run(self, cmd):
-		startupinfo = None
-		if os.name == 'nt':
-			startupinfo = subprocess.STARTUPINFO()
-			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-		process = subprocess.Popen(cmd, startupinfo=startupinfo, stdout=PIPE, stderr=PIPE)
-		return process
-		
 	def get_streams_followed(self):
 		streams = []
 		streams_followed = self.twitch.getstreamsfollowing()["streams"]
-		for i, channel_data in enumerate(streams_followed):
-			channel = channel_data['channel']
-			
-			stream = {}
-			stream['streamer'] = self.to_str(channel['display_name'])
-			stream['status'] = self.to_str(channel['status'])
-			stream['game'] = self.to_str(channel['game'])
-			stream['url'] = self.to_str(channel['url'])
-
-			streams.append(stream)
-
+		for channel_data in streams_followed:
+			streams.append(Stream(channel_data))
 		return streams
-		
-	def get_stream_qualities(self, url):
-		'''
-		#doesn't return all qualities
-		livestreamer = Livestreamer()
-		plugin = livestreamer.resolve_url(url)
-
-		qualities = plugin.get_streams().keys()
-		'''
-		#qualities, stderr = Popen("livestreamer %s" % url, stdout=PIPE, stderr=PIPE).communicate()
-		qualities_data, stderr = self.run("livestreamer %s" % url).communicate()
-		found_qualities = re.search("Found streams: (.*)", qualities_data)
-		if found_qualities:
-			qualities = found_qualities.group(1).replace("\n", '').replace("(worst)","").replace("(best)",'').replace("(worst, best)", '')
-			qualities = [x.strip() for x in qualities.split(',')]
-		return qualities
-
-	def start_video(self, url, quality = "worst"):
-		vid_status = None
-		vid = self.run("livestreamer %s %s" % (url, quality)) #does not wait to complete
 		
 	def display_streams_followed(self):
 	
@@ -73,15 +33,13 @@ class Spazm(Screen):
 		while True:
 			self.reset()
 			#Display streams followed that are live
-			self.add("=== Streams Followed ===") 
-			self.add()
-			self.add("`) Refresh")
-			self.add()
-			
+			self.add(["=== Streams Followed ===", "\n", "`) Refresh", "\n"] ) 
+
 			try:
 				for i, stream in enumerate(streams):
-					self.add("%s) %s [%s]" % (hex(i + 1)[2:], stream['streamer'], stream['game']))
-					self.add(stream['status'])
+					stream_buffer = stream.load_stream_buffer()
+					stream_buffer[0] = "%s) %s" % (hex(i + 1)[2:], stream_buffer[0]) #add index to the stream_buffer
+					self.add(stream_buffer) #change add to take a list
 					self.add()
 			except:
 				pass
@@ -94,33 +52,39 @@ class Spazm(Screen):
 				streams = self.get_streams_followed()
 			else:
 				self.reset()
-				self.add("=== Qualities ===")
-				self.add()
-				self.add("`) Back")
-				self.add()
+				self.add(["=== Qualities ===", "\n", "`) Back", "\n"])
 				
 				self.screen.addstr(1, 69, "[LOADING]")
 				self.screen.refresh()
 				
-				try:
-					url = streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
-					qualities = self.get_stream_qualities(url)
-					for i, quality in enumerate(qualities):
-						self.add("%s) %s" % (i + 1, quality))
+				#try:
+				'''#print out the qualities
+				url = streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
+				
+				qualities = self.get_stream_qualities(url)
+				for i, quality in enumerate(qualities):
+					self.add("%s) %s" % (i + 1, quality))
+				'''
+				stream = streams[int(input, 16) - 1]
+				self.add(stream.load_qualities_buffer())					
+				self.display()
+				
+				input = self.get_input()
+				if input != '`' and input.isdigit():
+					self.screen.addstr(1, 68, "[STARTING]")	
+					self.screen.refresh()
 					
-					self.display()
-					input = self.get_input()
-					if input != '`' and input.isdigit():
-						self.screen.addstr(1, 68, "[STARTING]")	
-						self.screen.refresh()
-						self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
-				except:
-					pass
+					#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
+					stream.watch(int(input) - 1)
+							
+				#except:
+				#	pass
 	
 if __name__ == '__main__':
 	s = Spazm()
 
 	while True:
+		input = '0'
 		'''
 		screen.clear()
 		screen.border(0)
@@ -134,6 +98,5 @@ if __name__ == '__main__':
 		print "Choose: ",
 		input = raw_input()
 		'''
-		input = '0'
 		if input == '0':
 			s.display_streams_followed()

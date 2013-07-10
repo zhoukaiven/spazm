@@ -4,15 +4,9 @@ import curses
 from textwrap import wrap
 
 class Screen(object):
-	HEIGHT = 23
+	HEIGHT = 24
 	WIDTH = 78
 	
-	'''
-	screen = None
-	title = None
-	buffer = None
-	offset = None #vertical scrolling offset
-	'''
 	def __init__(self):
 		self.screen = curses.initscr()
 		self.screen.keypad(1)
@@ -55,11 +49,15 @@ class Screen(object):
 			if line == self.HEIGHT:
 				return
 	
-	def add(self, str = "\n"):
-		if str == "\n":
-			self.buffer.append(" ") #Appending a new line breaks the border
+	def add(self, new_buffer = None):
+		if new_buffer:
+			for line in new_buffer:
+				if line == "\n":
+					self.buffer.append(" ")
+				else:
+					self.buffer.extend(wrap(self.to_str(line), self.WIDTH))
 		else:
-			self.buffer.extend(wrap(str, self.WIDTH))
+			self.buffer.append(" ") #Appending a new line breaks the border
 			
 	def get_input(self):
 		input = self.screen.getch()
@@ -70,6 +68,7 @@ class Screen(object):
 		elif input == curses.KEY_DOWN:
 			self.scroll_down()
 			return self.get_input()
+			
 		self.offset = 0
 		return unichr(input)
 		
