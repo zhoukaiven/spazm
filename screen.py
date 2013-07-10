@@ -30,7 +30,7 @@ class Screen(object):
 		try:
 			return str(obj)
 		except UnicodeEncodeError:
-			return unicode(obj).encode('unicode_escape')
+			return unicode(obj).encode('ascii','replace')#.encode('unicode_escape')
 	
 	def load_buffer(self):
 		line = 1 #offset for the border

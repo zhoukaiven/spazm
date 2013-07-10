@@ -19,30 +19,32 @@ class Spazm(Screen):
 		else:
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
+		
+		self.streams = []
 	
 	def get_streams_followed(self):
-		streams = []
 		streams_followed = self.twitch.getstreamsfollowing()["streams"]
 		for channel_data in streams_followed:
-			streams.append(Stream(channel_data))
-		return streams
+			url = channel_data['channel']['url']
+			if not any(stream.get_url() == url for stream in self.streams):
+				self.streams.append(Stream(channel_data))
 		
 	def display_streams_followed(self):
 	
-		streams = self.get_streams_followed()
+		self.get_streams_followed()
 		while True:
 			self.reset()
 			#Display streams followed that are live
 			self.add(["=== Streams Followed ===", "\n", "`) Refresh", "\n"] ) 
 
-			try:
-				for i, stream in enumerate(streams):
-					stream_buffer = stream.load_stream_buffer()
-					stream_buffer[0] = "%s) %s" % (hex(i + 1)[2:], stream_buffer[0]) #add index to the stream_buffer
-					self.add(stream_buffer) #change add to take a list
-					self.add()
-			except:
-				pass
+			#try:
+			for i, stream in enumerate(self.streams):
+				stream_buffer = stream.load_stream_buffer()
+				stream_buffer[0] = "%s) %s" % (hex(i + 1)[2:], stream_buffer[0]) #add index to the stream_buffer
+				self.add(stream_buffer) #change add to take a list
+				self.add()
+			#except:
+			#	pass
 			self.display()
 			input = self.get_input()
 			
@@ -59,13 +61,13 @@ class Spazm(Screen):
 				
 				#try:
 				'''#print out the qualities
-				url = streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
+				url = self.streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
 				
 				qualities = self.get_stream_qualities(url)
 				for i, quality in enumerate(qualities):
 					self.add("%s) %s" % (i + 1, quality))
 				'''
-				stream = streams[int(input, 16) - 1]
+				stream = self.streams[int(input, 16) - 1]
 				self.add(stream.load_qualities_buffer())					
 				self.display()
 				

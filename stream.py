@@ -12,7 +12,7 @@ class Stream(object):
 		self.streamer = channel['display_name']
 		self.status = channel['status']
 		self.game = channel['game']
-		self.url = channel['url']
+		self.url = channel['url'] #primary key
 		
 		self.qualities = None
 		
@@ -60,5 +60,7 @@ class Stream(object):
 		
 	#def start_video(self, url, quality = "worst"):
 	def watch(self, quality = "worst"):
-		open('cmd.txt', 'w').write("livestreamer %s %s" % (self.url, self.qualities[quality]))
 		self.run("livestreamer %s %s" % (self.url, self.qualities[quality])) #does not wait to complete
+		
+	def get_url(self):
+		return self.url
