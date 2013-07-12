@@ -44,9 +44,13 @@ class Stream(object):
 		#qualities, stderr = Popen("livestreamer %s" % self.url, stdout=PIPE, stderr=PIPE).communicate()
 		qualities_data, stderr = self.run("livestreamer %s" % self.url).communicate()
 		found_qualities = re.search("Found streams: (.*)", qualities_data)
+		no_streams = re.search("No streams found", qualities_data)
+		
 		if found_qualities:
 			self.qualities = found_qualities.group(1).replace("\n", '').replace("(worst)","").replace("(best)",'').replace("(worst, best)", '')
 			self.qualities = [x.strip() for x in self.qualities.split(',')]
+		elif no_streams:
+			self.qualities = -1
 				
 	def load_qualities_buffer(self):
 		if self.qualities:
@@ -54,6 +58,8 @@ class Stream(object):
 			for i, quality in enumerate(buffer):
 				buffer[i] = "%s) %s"%( (i+1), quality )
 			return buffer
+		elif self.qualities == -1:
+			return None
 		else:
 			self.get_stream_qualities()
 			return self.load_qualities_buffer()

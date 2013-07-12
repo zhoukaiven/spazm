@@ -42,8 +42,8 @@ class Spazm(Screen):
 					break 
 		
 	def display_streams_followed(self):
-	
 		self.get_streams_followed()
+		
 		while True:
 			self.reset()
 			#Display streams followed that are live
@@ -74,16 +74,22 @@ class Spazm(Screen):
 				#try:
 
 				stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
-				self.add(stream.load_qualities_buffer())					
-				self.display()
-				
-				input = self.get_input()
-				if input != '`' and input.isdigit():
-					self.screen.addstr(1, 68, "[STARTING]")	
+				qualities = stream.load_qualities_buffer()
+				if not qualities: #refresh list of streams, since this stream is now dead
+					self.screen.addstr(1, 70, "[FAILED]")
 					self.screen.refresh()
+					streams = self.get_streams_followed()
+				else:
+					self.add(qualities)					
+					self.display()
 					
-					#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
-					stream.watch(int(input) - 1)
+					input = self.get_input()
+					if input != '`' and input.isdigit():
+						self.screen.addstr(1, 68, "[STARTING]")	
+						self.screen.refresh()
+						
+						#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
+						stream.watch(int(input) - 1)
 							
 				#except:
 				#	pass
