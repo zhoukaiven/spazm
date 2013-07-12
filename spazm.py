@@ -20,14 +20,26 @@ class Spazm(Screen):
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
 		
-		self.streams = []
+		self.streams = {}
 	
 	def get_streams_followed(self):
-		streams_followed = self.twitch.getstreamsfollowing()["streams"]
-		for channel_data in streams_followed:
+		stream_data = self.twitch.getstreamsfollowing()["streams"]
+		live_urls = [channel_data['channel']['url'] for channel_data in stream_data]
+		
+		cached_live_urls  = set(live_urls) & set(self.streams.keys())
+		dead_urls = set(self.streams.keys()) - set(cached_live_urls)
+		new_urls = set(live_urls) - set(cached_live_urls)
+		
+		for dead_url in dead_urls:
+			del self.streams[dead_url] 
+			
+		for channel_data in stream_data:
 			url = channel_data['channel']['url']
-			if not any(stream.get_url() == url for stream in self.streams):
-				self.streams.append(Stream(channel_data))
+			if url in new_urls:
+				self.streams[url] = Stream(channel_data)
+				new_urls.remove(url)
+				if not new_urls:
+					break 
 		
 	def display_streams_followed(self):
 	
@@ -38,7 +50,7 @@ class Spazm(Screen):
 			self.add(["=== Streams Followed ===", "\n", "`) Refresh", "\n"] ) 
 
 			#try:
-			for i, stream in enumerate(self.streams):
+			for i, stream in enumerate(self.streams.values()):
 				stream_buffer = stream.load_stream_buffer()
 				stream_buffer[0] = "%s) %s" % (hex(i + 1)[2:], stream_buffer[0]) #add index to the stream_buffer
 				self.add(stream_buffer) #change add to take a list
@@ -60,14 +72,8 @@ class Spazm(Screen):
 				self.screen.refresh()
 				
 				#try:
-				'''#print out the qualities
-				url = self.streams[int(input, 16) - 1]['url'] #Display qualities for the stream chosen
-				
-				qualities = self.get_stream_qualities(url)
-				for i, quality in enumerate(qualities):
-					self.add("%s) %s" % (i + 1, quality))
-				'''
-				stream = self.streams[int(input, 16) - 1]
+
+				stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
 				self.add(stream.load_qualities_buffer())					
 				self.display()
 				

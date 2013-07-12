@@ -61,6 +61,3 @@ class Stream(object):
 	#def start_video(self, url, quality = "worst"):
 	def watch(self, quality = "worst"):
 		self.run("livestreamer %s %s" % (self.url, self.qualities[quality])) #does not wait to complete
-		
-	def get_url(self):
-		return self.url
