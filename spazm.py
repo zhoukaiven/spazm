@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-from livestreamer import Livestreamer
 import twitchingpython
 
 from screen import *
@@ -38,8 +37,10 @@ class Spazm(Screen):
 			if url in new_urls:
 				self.streams[url] = Stream(channel_data)
 				new_urls.remove(url)
-				if not new_urls:
-					break 
+				#if not new_urls:
+				#	break 
+			else: #it is in cached_live_urls
+				self.streams[url].update(channel_data)
 		
 	def display_streams_followed(self):
 		self.get_streams_followed()
@@ -71,46 +72,29 @@ class Spazm(Screen):
 				self.screen.addstr(1, 69, "[LOADING]")
 				self.screen.refresh()
 				
-				#try:
+				try:
 
-				stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
-				qualities = stream.load_qualities_buffer()
-				if not qualities: #refresh list of streams, since this stream is now dead
-					self.screen.addstr(1, 70, "[FAILED]")
-					self.screen.refresh()
-					streams = self.get_streams_followed()
-				else:
-					self.add(qualities)					
-					self.display()
-					
-					input = self.get_input()
-					if input != '`' and input.isdigit():
-						self.screen.addstr(1, 68, "[STARTING]")	
+					stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
+					qualities = stream.load_qualities_buffer()
+					if not qualities: #refresh list of streams, since this stream is now dead
+						self.screen.addstr(1, 70, "[FAILED]")
 						self.screen.refresh()
+						streams = self.get_streams_followed()
+					else:
+						self.add(qualities)					
+						self.display()
 						
-						#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
-						stream.watch(int(input) - 1)
+						input = self.get_input()
+						if input != '`' and input.isdigit():
+							self.screen.addstr(1, 68, "[STARTING]")	
+							self.screen.refresh()
 							
-				#except:
-				#	pass
+							#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
+							stream.watch(int(input) - 1)
+								
+				except:
+					pass
 	
 if __name__ == '__main__':
 	s = Spazm()
-
-	while True:
-		input = '0'
-		'''
-		screen.clear()
-		screen.border(0)
-		
-		print "=== Options ==="
-		options = ["Streams Following"]
-		
-		for i, option in enumerate(options):
-			print "%s) %s" % (i, option)
-			
-		print "Choose: ",
-		input = raw_input()
-		'''
-		if input == '0':
-			s.display_streams_followed()
+	s.display_streams_followed()
