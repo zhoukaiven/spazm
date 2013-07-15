@@ -6,13 +6,14 @@ from textwrap import wrap
 class Screen(object):
 	HEIGHT = 24
 	WIDTH = 78
+	ACCEPTED_INPUT = "`123456789abcdef"
 	
 	def __init__(self):
 		self.screen = curses.initscr()
 		self.screen.keypad(1)
 		self.screen.leaveok(1)
 		curses.noecho()
-		
+
 		self.title = []
 		self.buffer = []
 		self.offset = 0
@@ -58,7 +59,10 @@ class Screen(object):
 					self.buffer.extend(wrap(self.to_str(line), self.WIDTH))
 		else:
 			self.buffer.append(" ") #Appending a new line breaks the border
-			
+	
+	def set_status(self, status):
+		self.screen.addstr(1, self.WIDTH - len(status), status, curses.A_REVERSE)
+	
 	def get_input(self):
 		input = self.screen.getch()
 
@@ -68,8 +72,10 @@ class Screen(object):
 		elif input == curses.KEY_DOWN:
 			self.scroll_down()
 			return self.get_input()
+		elif unichr(input) not in self.ACCEPTED_INPUT:
+			return self.get_input()
 			
-		self.offset = 0
+		self.offset = 0 #reset the offset so that the next buffer loaded is in the correct position
 		return unichr(input)
 		
 	def scroll_up(self):

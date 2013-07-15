@@ -34,13 +34,11 @@ class Stream(object):
 
 	def get_stream_qualities(self):
 		'''	 #can't use this until livestreamer python api supports flash streams
-		#doesn't return all qualities
 		livestreamer = Livestreamer()
 		plugin = livestreamer.resolve_url(self.url)
 
 		self.qualities = plugin.get_streams().keys()
 		'''
-		#qualities, stderr = Popen("livestreamer %s" % self.url, stdout=PIPE, stderr=PIPE).communicate()
 		qualities_data, stderr = self.run("livestreamer %s" % self.url).communicate()
 		found_qualities = re.search("Found streams: (.*)", qualities_data)
 		no_streams = re.search("No streams found", qualities_data)
@@ -63,6 +61,5 @@ class Stream(object):
 			self.get_stream_qualities()
 			return self.load_qualities_buffer()
 		
-	#def start_video(self, url, quality = "worst"):
 	def watch(self, quality):
 		self.run("livestreamer %s %s" % (self.url, self.qualities[quality])) #does not wait to complete

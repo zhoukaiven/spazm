@@ -37,12 +37,12 @@ class Spazm(Screen):
 			if url in new_urls:
 				self.streams[url] = Stream(channel_data)
 				new_urls.remove(url)
-				#if not new_urls:
-				#	break 
 			else: #it is in cached_live_urls
 				self.streams[url].update(channel_data)
 		
 	def display_streams_followed(self):
+		
+		
 		self.get_streams_followed()
 		
 		while True:
@@ -62,14 +62,14 @@ class Spazm(Screen):
 			input = self.get_input()
 			
 			if input == '`':
-				self.screen.addstr(1, 66, "[REFRESHING]")
+				self.set_status("REFRESHING")
 				self.screen.refresh()
 				streams = self.get_streams_followed()
 			else:
 				self.reset()
 				self.add(["=== Qualities ===", "\n", "`) Back", "\n"])
 				
-				self.screen.addstr(1, 69, "[LOADING]")
+				self.set_status("LOADING")
 				self.screen.refresh()
 				
 				try:
@@ -77,7 +77,7 @@ class Spazm(Screen):
 					stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
 					qualities = stream.load_qualities_buffer()
 					if not qualities: #refresh list of streams, since this stream is now dead
-						self.screen.addstr(1, 70, "[FAILED]")
+						self.set_status("FAILED")
 						self.screen.refresh()
 						streams = self.get_streams_followed()
 					else:
@@ -86,12 +86,10 @@ class Spazm(Screen):
 						
 						input = self.get_input()
 						if input != '`' and input.isdigit():
-							self.screen.addstr(1, 68, "[STARTING]")	
+							self.set_status("STARTING")
 							self.screen.refresh()
 							
-							#self.start_video(url, qualities[int(input) - 1]) #Start VLC and connect to stream
-							stream.watch(int(input) - 1)
-								
+							stream.watch(int(input) - 1)			
 				except:
 					pass
 	
