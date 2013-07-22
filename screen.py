@@ -17,7 +17,7 @@ class Screen(object):
 		self.title = []
 		self.buffer = []
 		self.offset = 0
-	
+		
 	def reset(self):
 		self.buffer = []
 	
@@ -62,6 +62,7 @@ class Screen(object):
 	
 	def set_status(self, status):
 		self.screen.addstr(1, self.WIDTH - len(status), status, curses.A_REVERSE)
+		self.screen.refresh()
 	
 	def get_input(self):
 		input = self.screen.getch()
