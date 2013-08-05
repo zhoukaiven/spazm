@@ -2,22 +2,22 @@
 # -*- coding: utf-8 -*- 
 
 import twitchingpython
-
+import time
 from screen import *
 from stream import *
 
 class Spazm(Screen):
-	ACCESS_TOKEN = None
-	twitch = None
+	#ACCESS_TOKEN = None
+	#twitch = None
 	
-	def __init__(self, token = None):
-		super(Spazm, self).__init__()
-		
+	def __init__(self, token = None):		
 		if not token:
 			self.ACCESS_TOKEN = twitchingpython.gettoken()
 		else:
 			self.ACCESS_TOKEN = token
 		self.twitch = twitchingpython.TwitchingWrapper(self.ACCESS_TOKEN)
+		
+		super(Spazm, self).__init__()
 		
 		self.streams = {}
 	
@@ -43,7 +43,7 @@ class Spazm(Screen):
 	def display_streams_followed(self):
 
 		self.get_streams_followed()
-		
+
 		while True:
 			self.reset()
 			#Display streams followed that are live
@@ -58,7 +58,6 @@ class Spazm(Screen):
 			#except:
 			#	pass
 			self.display()
-			#self.set_status(str(t1-t0))
 			input = self.get_input()
 			
 			if input == '`':
@@ -73,18 +72,20 @@ class Spazm(Screen):
 				try:
 
 					stream = self.streams.values()[int(input, 16) - 1] #values() should always return the same list
+					t0 = time.clock()
 					qualities = stream.load_qualities_buffer()
+					t1 = time.clock()
 					if not qualities: #refresh list of streams, since this stream is now dead
 						self.set_status("FAILED")
+						
 						streams = self.get_streams_followed()
 					else:
 						self.add(qualities)					
 						self.display()
-						
+						self.set_status(str(t1-t0))
 						input = self.get_input()
 						if input != '`' and input.isdigit():
 							self.set_status("STARTING")
-							
 							stream.watch(int(input) - 1)			
 				except:
 					pass
